@@ -3,8 +3,8 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askdirectory
 
-from setting import Setting
-from setting import FunctionSettingRecord
+from ui.setting import Setting
+from ui.setting import FunctionSettingRecord
 from tools.enum_generator import generate_java_enum
 
 

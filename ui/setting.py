@@ -2,7 +2,7 @@ import json
 
 
 class Setting(object):
-    path = '/home/summus/script/python-scripit/ui/config.json'
+    path = '/home/summus/script/python-script/ui/config.json'
 
     def __init__(self):
         with open(Setting.path, 'r') as config_file:
