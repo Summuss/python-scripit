@@ -3,14 +3,15 @@ import argparse
 import re
 
 
-def find_patch(regex, path, table, ddl):
+def find_patch(regex, path, table, ddl, edit_flag):
     if not path:
         path = '/home/summus/Work/patches'
 
-    subprocess.run(['svn', 'update', path],stdout=subprocess.PIPE)
-    result = subprocess.run(f"grep -i '{regex}' {path}/*", check=True, shell=True,
-                            stdout=subprocess.PIPE).stdout.decode(
-        'utf-8')
+    subprocess.run(['svn', 'update', path])
+    code, result = subprocess.getstatusoutput(f"grep -i '{regex}' {path}/*")
+    if code != 0:
+        print("not found")
+        exit(-1)
     file_name_list = get_file_path_from_grep_result(result)
     if table:
         filtered_file_name_list = []
@@ -24,6 +25,9 @@ def find_patch(regex, path, table, ddl):
                 result = r.stdout.decode('utf-8')
                 filtered_file_name_list.append(file_name)
         file_name_list = filtered_file_name_list
+    if len(file_name_list) == 0:
+        print("not found")
+        exit(-1)
 
     if ddl:
         filtered_file_name_list = []
@@ -38,10 +42,36 @@ def find_patch(regex, path, table, ddl):
                 filtered_file_name_list.append(file_name)
         file_name_list = filtered_file_name_list
 
-    print('\n'.join(file_name_list))
+    if len(file_name_list) == 0:
+        print("not found")
+        exit(-1)
 
+    print('\n############################################################\n')
+    for i, v in enumerate(file_name_list):
+        print(f"{i + 1}:{v}")
+    print('\n############################################################\n')
 
-pass
+    if edit_flag:
+        for file_name in file_name_list:
+            subprocess.run(['gedit', file_name])
+    else:
+        while True:
+            num = int(input(f"input the sequence number of file to be edited(0~{len(file_name_list)}):"))
+            if num == 0:
+                break
+            elif 0 < num <= len(file_name_list):
+                subprocess.run(['gedit', file_name_list[num - 1]])
+                print('\n############################################################\n')
+                for i, v in enumerate(file_name_list):
+                    print(f"{i + 1}:{v}")
+                print('\n############################################################\n')
+
+            else:
+                print("输入不合法")
+                print('\n############################################################\n')
+                for i, v in enumerate(file_name_list):
+                    print(f"{i + 1}:{v}")
+                print('\n############################################################\n')
 
 
 def get_file_path_from_grep_result(grep_result):
@@ -54,6 +84,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--table", type=str, help='table name')
     parser.add_argument("-p", "--path", type=str, help="patch folder's path")
     parser.add_argument("-d", "--ddl", type=str, help='ddl type')
+    parser.add_argument("-e", "--edit", action="store_true")
 
     args = parser.parse_args()
-    find_patch(args.regex, args.path, args.table, args.ddl)
+    find_patch(args.regex, args.path, args.table, args.ddl, args.edit)
